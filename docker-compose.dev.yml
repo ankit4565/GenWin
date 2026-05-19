@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: smartcity-postgres
+    restart: always
+
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: smartcity
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: smartcity-redis
+
+    ports:
+      - "6379:6379"
+
+  chromadb:
+    image: chromadb/chroma
+    container_name: smartcity-chromadb
+
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
