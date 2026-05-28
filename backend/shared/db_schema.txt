@@ -1,0 +1,183 @@
+CREATE SCHEMA "public";
+CREATE TYPE "user_role" AS ENUM('CITIZEN', 'OFFICER', 'ADMIN');
+CREATE TYPE "grievance_status" AS ENUM('SUBMITTED', 'UNDER_REVIEW', 'IN_PROGRESS', 'RESOLVED', 'REJECTED');
+CREATE TABLE "alembic_version" (
+	"version_num" varchar(32),
+	CONSTRAINT "alembic_version_pkc" PRIMARY KEY("version_num")
+);
+
+CREATE TABLE "alerts" (
+	"id" uuid PRIMARY KEY,
+	"alert_type" varchar(50) NOT NULL,
+	"severity" varchar(20) NOT NULL,
+	"title" varchar(200) NOT NULL,
+	"message" text NOT NULL,
+	"zone_id" uuid,
+	"location" geometry(point,4326),
+	"source" varchar(30) DEFAULT 'AI',
+	"status" varchar(20) DEFAULT 'ACTIVE',
+	"created_at" timestamp with time zone DEFAULT now(),
+	"acknowledged_by" uuid,
+	"resolved_at" timestamp with time zone
+);
+
+CREATE TABLE "chat_messages" (
+	"id" uuid PRIMARY KEY,
+	"session_id" uuid NOT NULL,
+	"role" varchar(20),
+	"content" text,
+	"tokens_used" integer,
+	"created_at" timestamp with time zone DEFAULT now()
+);
+CREATE TABLE "chat_sessions" (
+	"id" uuid PRIMARY KEY,
+	"session_token" varchar(255) CONSTRAINT "chat_sessions_session_token_key" UNIQUE,
+	"user_id" uuid,
+	"language" varchar(10) DEFAULT 'en',
+	"created_at" timestamp with time zone DEFAULT now()
+);
+CREATE TABLE "city_zones" (
+	"id" uuid PRIMARY KEY,
+	"zone_code" varchar(20) CONSTRAINT "city_zones_zone_code_key" UNIQUE,
+	"zone_name" varchar(100) NOT NULL,
+	"ward_number" integer NOT NULL,
+	"boundary" geometry(MultiPolygon,4326) NOT NULL,
+	"area_sq_km" numeric(8, 2),
+	"population" integer,
+	"zone_type" varchar(50)
+);
+CREATE TABLE "drainage_blockages" (
+	"id" uuid PRIMARY KEY,
+	"segment_id" uuid NOT NULL,
+	"reported_by" uuid NOT NULL,
+	"location" geometry(point,4326) NOT NULL,
+	"severity" varchar(20),
+	"status" varchar(20) DEFAULT 'OPEN',
+	"photo_url" varchar(500),
+	"reported_at" timestamp with time zone DEFAULT now(),
+	"resolved_at" timestamp with time zone
+);
+CREATE TABLE "drainage_segments" (
+	"id" uuid PRIMARY KEY,
+	"segment_name" varchar(150) NOT NULL,
+	"geometry" geometry(LineString,4326) NOT NULL,
+	"zone_id" uuid,
+	"capacity_m3" numeric(8, 2),
+	"drain_type" varchar(30),
+	"condition" varchar(20) DEFAULT 'GOOD',
+	"last_cleaned" date
+);
+CREATE TABLE "flood_risk_readings" (
+	"id" uuid PRIMARY KEY,
+	"zone_id" uuid,
+	"recorded_at" timestamp,
+	"risk_score" numeric(4, 2),
+	"rainfall_mm" numeric(6, 2),
+	"water_level" numeric(5, 2),
+	"risk_label" varchar(20)
+);
+CREATE TABLE "grievance_attachments" (
+	"id" uuid PRIMARY KEY,
+	"grievance_id" uuid NOT NULL,
+	"file_url" varchar(500),
+	"file_type" varchar(20)
+);
+CREATE TABLE "grievance_comments" (
+	"id" uuid PRIMARY KEY,
+	"grievance_id" uuid NOT NULL,
+	"user_id" uuid NOT NULL,
+	"comment" text,
+	"is_internal" boolean DEFAULT false,
+	"created_at" timestamp with time zone DEFAULT now()
+);
+CREATE TABLE "grievances" (
+	"id" uuid PRIMARY KEY,
+	"ticket_number" varchar(20) CONSTRAINT "grievances_ticket_number_key" UNIQUE,
+	"citizen_id" uuid,
+	"title" varchar(200) NOT NULL,
+	"description" text NOT NULL,
+	"category" varchar(50) NOT NULL,
+	"department" varchar(50) NOT NULL,
+	"priority" varchar(20) DEFAULT 'MEDIUM',
+	"status" grievance_status DEFAULT 'SUBMITTED',
+	"location" geometry(point,4326),
+	"zone_id" uuid,
+	"assigned_to" uuid,
+	"ai_confidence" numeric(4, 3),
+	"created_at" timestamp with time zone DEFAULT now(),
+	"duplicate_of" uuid,
+	"resolved_at" timestamp with time zone
+);
+CREATE TABLE "infrastructure_assets" (
+	"id" uuid PRIMARY KEY,
+	"asset_name" varchar(150) NOT NULL,
+	"asset_type" varchar(50) NOT NULL,
+	"location" geometry(point,4326) NOT NULL,
+	"zone_id" uuid,
+	"condition" varchar(20) DEFAULT 'GOOD',
+	"health_score" numeric(4, 1),
+	"last_inspected" date,
+	CONSTRAINT "chk_health_score" CHECK (((health_score >= (0)::numeric) AND (health_score <= (100)::numeric)))
+);
+CREATE TABLE "refresh_tokens" (
+	"id" uuid PRIMARY KEY,
+	"user_id" uuid,
+	"token_hash" varchar(255) NOT NULL CONSTRAINT "refresh_tokens_token_hash_key" UNIQUE,
+	"revoked" boolean DEFAULT false,
+	"expires_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now()
+);
+CREATE TABLE "simulation_runs" (
+	"id" uuid PRIMARY KEY,
+	"created_by" uuid,
+	"sim_type" varchar(30) NOT NULL,
+	"scenario_name" varchar(200) NOT NULL,
+	"input_params" jsonb NOT NULL,
+	"result_data" jsonb,
+	"status" varchar(20) DEFAULT 'PENDING',
+	"created_at" timestamp with time zone DEFAULT now(),
+	"result_geojson" text,
+	"completed_at" timestamp with time zone
+);
+CREATE TABLE "spatial_ref_sys" (
+	"srid" integer PRIMARY KEY,
+	"auth_name" varchar(256),
+	"auth_srid" integer,
+	"srtext" varchar(2048),
+	"proj4text" varchar(2048),
+	CONSTRAINT "spatial_ref_sys_srid_check" CHECK (((srid > 0) AND (srid <= 998999)))
+);
+CREATE TABLE "traffic_readings" (
+	"id" uuid PRIMARY KEY,
+	"segment_id" uuid,
+	"recorded_at" timestamp with time zone NOT NULL,
+	"density_level" smallint,
+	"avg_speed_kmph" numeric(5, 1),
+	"vehicle_count" integer,
+	"source" varchar(20) DEFAULT 'SIMULATED',
+	CONSTRAINT "chk_density_level" CHECK (((density_level >= 1) AND (density_level <= 5)))
+);
+CREATE TABLE "traffic_segments" (
+	"id" uuid PRIMARY KEY,
+	"segment_name" varchar(150) NOT NULL,
+	"geometry" geometry(LineString,4326),
+	"zone_id" uuid,
+	"road_type" varchar(30),
+	"speed_limit" integer,
+	"lanes" integer,
+	"is_accident_prone" boolean DEFAULT false
+);
+CREATE TABLE "users" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"full_name" varchar(100) NOT NULL,
+	"email" varchar(255) NOT NULL CONSTRAINT "uq_users_email" UNIQUE,
+	"password_hash" varchar(255) NOT NULL,
+	"role" varchar(30) DEFAULT 'CITIZEN',
+	"is_active" boolean DEFAULT true,
+	"phone" varchar(20) CONSTRAINT "users_phone_key" UNIQUE,
+	"department" varchar(50),
+	"is_verified" boolean DEFAULT false,
+	"preferred_lang" varchar(5) DEFAULT 'en',
+	"created_at" timestamp with time zone DEFAULT now(),
+	"last_login" timestamp with time zone
+);
