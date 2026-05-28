@@ -1,0 +1,9 @@
+class Roles:
+
+    SUPER_ADMIN = "SUPER_ADMIN"
+
+    CITY_ADMIN = "CITY_ADMIN"
+
+    OFFICER = "OFFICER"
+
+    CITIZEN = "CITIZEN"
