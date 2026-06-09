@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     class Config:
         # Load environment variables from the .env file located in the parent directory (backend/.env)
         env_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+        extra = "ignore"
 
 # Instantiate settings to be imported across the project
 settings = Settings()
