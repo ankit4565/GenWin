@@ -3,15 +3,15 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User
-from app.models.refresh_tokens import RefreshToken
+from auth_services.app.models.user import User
+from auth_services.app.models.refresh_tokens import RefreshToken
 
-from app.utils.password import (
+from auth_services.app.utils.password import (
     hash_password,
     verify_password
 )
 
-from app.utils.token_hash import hash_token
+from auth_services.app.utils.token_hash import hash_token
 
 from shared.jwt_utils import (
     create_access_token,

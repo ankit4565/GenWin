@@ -3,3 +3,4 @@ node_modules/
 *.pyc
 venv/
 .env
+backend/ansh/
