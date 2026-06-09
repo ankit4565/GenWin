@@ -1,18 +1,5 @@
-# Environment
-.env
-
-# Python
-venv/
 __pycache__/
+node_modules/
 *.pyc
-
-# Docker volumes
-postgres_data/
-chroma_data/
-
-# VS Code
-.vscode/
-
-# OS
-.DS_Store
-Thumbs.db
+venv/
+.env
