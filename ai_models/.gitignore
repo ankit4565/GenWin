@@ -5,3 +5,4 @@ traffic/src/*
 !traffic/src/main.py
 traffic/artifacts/*
 !traffic/artifacts/*.pkl
+data/*
