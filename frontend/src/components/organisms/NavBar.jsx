@@ -15,7 +15,7 @@ export default function NavBar() {
 					<div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#00450d] text-[16px] text-white shadow-sm">
 						B
 					</div>
-					<div className="hidden sm:block whitespace-nowrap text-[#00450d]">Bhopal Twin</div>
+					<div className="hidden sm:block whitespace-nowrap text-[#00450d]">GenWin</div>
 				</div>
 
 				<nav className="hidden items-center gap-6 md:flex">
