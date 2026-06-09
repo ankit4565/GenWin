@@ -9,14 +9,14 @@ from train import MODEL_PATH
 
 
 FEATURE_COLUMNS = [
-	"hour",
-	"day_of_week",
-	"is_weekend",
-	"area",
-	"free_flow_speed",
-	"current_travel_time",
-	"free_flow_travel_time",
-	"confidence",
+	 "hour",
+    "day_of_week",
+    "is_weekend",
+    "area",
+    "current_speed",
+    "free_flow_speed",
+    "travel_time",
+	
 ]
 
 

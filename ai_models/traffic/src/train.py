@@ -30,6 +30,7 @@ FEATURE_COLUMNS = [
     "is_weekend",
     "area",
     "current_speed",
+	"free_flow_speed",
     "travel_time",
 ]
 	 
@@ -41,6 +42,7 @@ def build_pipeline() -> Pipeline:
          "day_of_week",
          "is_weekend",
          "current_speed",
+         "free_flow_speed",
          "travel_time",
 		 
 	]

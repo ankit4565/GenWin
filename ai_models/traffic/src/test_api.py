@@ -22,5 +22,5 @@ try:
     )
 
 except requests.exceptions.RequestException as e:
-    print(f"Network Error for {area}: {e}")
+    print(f"Network Error: {e}")
     
