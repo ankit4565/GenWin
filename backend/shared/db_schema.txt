@@ -106,7 +106,15 @@ CREATE TABLE "grievances" (
 	"ai_confidence" numeric(4, 3),
 	"created_at" timestamp with time zone DEFAULT now(),
 	"duplicate_of" uuid,
-	"resolved_at" timestamp with time zone
+	"resolved_at" timestamp with time zone,
+	"rating" integer CHECK (rating >= 1 AND rating <= 5)
+);
+CREATE TABLE "grievance_supports" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"grievance_id" uuid NOT NULL REFERENCES grievances(id) ON DELETE CASCADE,
+	"citizen_id" uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+	"created_at" timestamp with time zone DEFAULT now(),
+	UNIQUE("grievance_id", "citizen_id")
 );
 CREATE TABLE "infrastructure_assets" (
 	"id" uuid PRIMARY KEY,

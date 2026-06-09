@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 from shared.db import get_db
 from shared.jwt_utils import verify_token
-from app.models.user import User
+from auth_services.app.models.user import User
 
 # Standard bearer scheme for decoding authorization header ("Bearer <token>")
 security = HTTPBearer()
