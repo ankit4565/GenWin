@@ -1,0 +1,14 @@
+# Ignore everything in this folder
+*
+
+# Allow directories so we can unignore specific files
+!*/
+
+# Keep the FastAPI entrypoint
+!src/main.py
+
+# Keep any model pickle files in artifacts
+!artifacts/*.pkl
+
+# Keep this .gitignore
+!.gitignore
