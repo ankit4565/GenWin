@@ -9,14 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.db import get_db
 
-from app.schemas.auth_schema import (
+from auth_services.app.schemas.auth_schema import (
     RegisterRequest,
     LoginRequest,
     RefreshRequest,
     ChangeRoleRequest
 )
 
-from app.services.auth_service import (
+from auth_services.app.services.auth_service import (
     register_user,
     login_user,
     refresh_access_token,
@@ -24,9 +24,9 @@ from app.services.auth_service import (
     update_user_role
 )
 
-from app.dependencies.auth import get_current_user
+from auth_services.app.dependencies.auth import get_current_user
 
-from app.middleware.rbac import require_roles
+from auth_services.app.middleware.rbac import require_roles
 
 
 router = APIRouter(

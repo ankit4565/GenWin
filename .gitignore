@@ -3,13 +3,5 @@ node_modules/
 *.pyc
 .venv/
 .env
+backend/ansh/
 backend/.venv/      
-
-
-# ML Data
-ai_models/traffic/data/
-ai_models/traffic/artifacts/
-
-# Model files
-*.joblib
-*.pkl

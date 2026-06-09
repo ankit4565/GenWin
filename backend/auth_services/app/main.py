@@ -10,7 +10,7 @@ backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, backend_root)
 
 # Import the authentication router from the routers module
-from app.routers.auth import router as auth_router
+from auth_services.app.routers.auth import router as auth_router
 
 # Import the global exception handler from shared module
 from shared.exceptions import (
