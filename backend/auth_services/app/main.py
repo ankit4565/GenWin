@@ -2,6 +2,8 @@ from fastapi import FastAPI
 import sys
 import os
 
+from fastapi.middleware.cors import CORSMiddleware
+
 # Add the backend root directory to sys.path to allow importing the 'shared' module
 # regardless of where uvicorn is executed from.
 backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -18,6 +20,19 @@ from shared.exceptions import (
 # Initialize the FastAPI application for the Auth Service
 app = FastAPI(
     title="Auth Service"
+)
+
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include the authentication router in the application
