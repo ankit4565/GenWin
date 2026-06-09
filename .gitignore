@@ -1,6 +1,7 @@
 __pycache__/
 node_modules/
 *.pyc
-venv/
+.venv/
 .env
 backend/ansh/
+backend/.venv/      
