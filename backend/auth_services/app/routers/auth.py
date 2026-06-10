@@ -92,7 +92,10 @@ async def get_me(
         "id": str(current_user.id),
         "email": current_user.email,
         "full_name": current_user.full_name,
-        "role": current_user.role
+        "role": current_user.role,
+        #  "phone": current_user.phone,
+        "password_hash": current_user.password_hash,
+       # "created_at": current_user.created_at.isoformat()
     }
 
 

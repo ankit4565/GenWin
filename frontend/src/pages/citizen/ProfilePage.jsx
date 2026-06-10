@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import NavBar from '../../components/organisms/NavBar';
+import { getCurrentUser } from '../../api/authApi';
 
 // ── Inline style injections for fonts + custom animations ──────────────────
 const GlobalStyles = () => (
@@ -213,10 +215,13 @@ function Toggle({ checked, onChange }) {
   );
 }
 
+
+
 // ── Main Page ──────────────────────────────────────────────────────────────
 export default function ProfilePage() {
-  const [fullName, setFullName]   = useState("Rajesh Kumar");
-  const [phone, setPhone]         = useState("+91 98765-43210");
+  const [fullName, setFullName]   = useState("");
+  const [user, setUser] = useState(null);
+  const [phone, setPhone]         = useState("");
   const [notifs, setNotifs]       = useState(true);
   const [language, setLanguage]   = useState("en");
   const [currentPw, setCurrentPw] = useState("");
@@ -228,102 +233,31 @@ export default function ProfilePage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
   }
+  useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const data = await getCurrentUser();
+
+      console.log("USER DATA:", data);
+
+      setUser(data);
+      setFullName(data.full_name || "");
+      setPhone(data.phone || "");
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+    }
+  };
+
+  fetchUser();
+}, []);
 
   return (
     <div className="font-inter min-h-screen flex flex-col" style={{ background: C.surface, color: C.onSurface }}>
+      <NavBar />
       <GlobalStyles />
 
       {/* ── Top App Bar ── */}
-      <header
-        className="fixed top-0 w-full z-50"
-        style={{
-          background: "rgba(247,251,242,0.78)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
-          borderBottom: `1px solid rgba(192,201,187,0.25)`,
-          boxShadow: "0 1px 8px rgba(0,69,13,.06)",
-        }}
-      >
-        <nav
-          className="flex items-center justify-between h-16 mx-auto"
-          style={{ padding: "0 64px", maxWidth: 1440 }}
-        >
-          {/* Left: logo + nav */}
-          <div className="flex items-center gap-8">
-            <span
-              className="font-hanken cursor-pointer select-none hover:opacity-80 transition-opacity"
-              style={{ fontSize: 26, fontWeight: 700, color: C.primary, letterSpacing: "-0.02em" }}
-            >
-              Bhopal Twin
-            </span>
-            <div className="hidden md:flex items-center gap-6">
-              {["City Map", "Alerts", "Projects"].map((item) => (
-                <a
-                  key={item}
-                  href="#"
-                  className="font-hanken transition-colors hover:text-green-800"
-                  style={{ fontSize: 16, fontWeight: 500, color: C.onSurfVar, textDecoration: "none" }}
-                >
-                  {item}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Right: search + icons + avatar */}
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex relative items-center">
-              <input
-                className="font-inter rounded-full pl-4 pr-10 py-2"
-                style={{
-                  background: C.surfContLow,
-                  border: "none",
-                  fontSize: 14,
-                  width: 240,
-                  color: C.onSurface,
-                }}
-                placeholder="Search twin data…"
-              />
-              <Icon
-                name="search"
-                className="absolute right-3"
-                style={{ fontSize: 20, color: C.onSurfVar }}
-              />
-            </div>
-
-            {[{ icon: "notifications" }, { icon: "settings", bordered: true }].map(({ icon, bordered }) => (
-              <button
-                key={icon}
-                className="flex items-center justify-center rounded-full transition-colors hover:bg-gray-100 active:scale-95"
-                style={{
-                  width: 40,
-                  height: 40,
-                  background: "transparent",
-                  border: bordered ? `2px solid ${C.primary}` : "none",
-                  cursor: "pointer",
-                }}
-              >
-                <Icon name={icon} style={{ color: C.primary }} />
-              </button>
-            ))}
-
-            {/* Avatar */}
-            <div
-              className="flex items-center justify-center rounded-full font-hanken font-bold select-none cursor-pointer hover:scale-105 transition-transform"
-              style={{
-                width: 40,
-                height: 40,
-                background: `linear-gradient(135deg,#2e7d32,#1b5e20)`,
-                border: `2px solid ${C.primaryFixed}`,
-                color: C.primaryFixed,
-                fontSize: 14,
-              }}
-            >
-              RK
-            </div>
-          </div>
-        </nav>
-      </header>
+     
 
       {/* ── Main ── */}
       <main
@@ -353,7 +287,7 @@ export default function ProfilePage() {
                     cursor: "default",
                   }}
                 >
-                  RK
+                  AB
                   {/* Hover overlay */}
                   <div
                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl cursor-pointer"
@@ -369,13 +303,13 @@ export default function ProfilePage() {
                   className="font-hanken"
                   style={{ fontSize: 32, fontWeight: 700, color: C.primary, lineHeight: "40px", margin: 0 }}
                 >
-                  Rajesh Kumar
+                  {user ? user.full_name : "Loading..."}
                 </h1>
                 <p
                   className="font-inter flex items-center gap-2 mt-1"
                   style={{ fontSize: 16, color: C.onSurfVar, margin: 0 }}
                 >
-                  rajesh.k@bhopal-citizen.in
+                  {user?.email || ""}
                   <Icon name="verified" filled style={{ fontSize: 16, color: C.primary }} />
                 </p>
                 <div className="flex gap-2 mt-2 flex-wrap">
@@ -389,7 +323,7 @@ export default function ProfilePage() {
                       fontWeight: 500,
                     }}
                   >
-                    CITIZEN_V2
+                    {user ? user.role : "Loading..."}
                   </span>
                   <span
                     className="font-mono px-3 py-1 rounded-full hover:scale-105 transition-transform cursor-default"
@@ -490,8 +424,8 @@ export default function ProfilePage() {
 
             {/* Account Metadata row */}
             <div className="grid grid-cols-3 gap-3">
-              <MetaCard label="ACCOUNT ROLE"  value="Citizen"               delay="0.25s" />
-              <MetaCard label="MEMBER SINCE"  value="Oct 14, 2023"          delay="0.30s" />
+              <MetaCard label="ACCOUNT ROLE"  value={ user?.role || "Loading..."}  delay="0.25s" />
+              <MetaCard label="MEMBER SINCE"  value={ user?.created_at ? new Date(user.created_at).toLocaleDateString() : "Loading..." }          delay="0.30s" />
               <MetaCard label="DEPARTMENT"    value="Public Works (Liaison)" delay="0.35s" />
             </div>
 

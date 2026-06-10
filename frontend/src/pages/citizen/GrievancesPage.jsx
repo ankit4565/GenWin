@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/organisms/NavBar';
 
 export default function GrievancesPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
-
+const navigate = useNavigate();
   const grievances = [
     {
       id: 1,
@@ -96,10 +97,16 @@ export default function GrievancesPage() {
             <h1 className="font-headline-lg text-headline-lg text-primary">My Grievances</h1>
             <p className="text-on-surface-variant font-body-sm">Track and manage your submitted service requests and complaints.</p>
           </div>
-          <button className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-md transition-all active:scale-95 w-fit">
-            <span className="material-symbols-outlined">add</span>
-            <span className="font-title-md text-body-lg font-semibold">Submit New Grievance</span>
-          </button>
+         <button
+       onClick={() => navigate('/grievances/new')}
+        className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full flex items-center gap-2 shadow-md transition-all active:scale-95 w-fit"
+         >
+        <span className="material-symbols-outlined">add</span>
+        <span className="font-title-md text-body-lg font-semibold">
+        Submit New Grievance
+       </span>
+       </button>
+
         </div>
 
         {/* Filter & Search Bar */}

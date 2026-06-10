@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import Navbar from '../../components/organisms/NavBar';
 
 export default function GrievanceDetailPage() {
