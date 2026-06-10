@@ -6,3 +6,5 @@ traffic/src/*
 traffic/artifacts/*
 !traffic/artifacts/*.pkl
 data/*
+traffic/data/
+traffic/artifacts/
