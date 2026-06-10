@@ -1,9 +1,6 @@
-import os
-import joblib
-import numpy as np
-import warnings
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+from shared.flood_risk_data import predict_flood_risk, get_flood_risk_geojson
 
 router = APIRouter(
     prefix="/flood",
@@ -22,69 +19,43 @@ class FloodRiskResponse(BaseModel):
     risk_score: float
     risk_label: str
 
-# Resolve model path relative to backend root
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# Current dir is: backend/flood_service/app/routers
-# Model is in: ai_models/flood/artifacts/flood_model.pkl
-MODEL_PATH = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", "..", "..", "ai_models", "flood", "artifacts", "flood_model.pkl"))
-
-_model = None
-
-def get_model():
-    global _model
-    if _model is None:
-        if not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError(f"Model file not found at {MODEL_PATH}")
-        _model = joblib.load(MODEL_PATH)
-    return _model
-
 @router.get("/status")
 async def get_status():
     """
-    Status and configuration details of the flood service.
+    Status of the flood service.
     """
     return {
         "status": "ok",
         "service": "flood_service",
-        "model_loaded": _model is not None or os.path.exists(MODEL_PATH)
+        "method": "deterministic_equation_logic"
     }
+
+@router.get("/geojson")
+async def get_flood_zones():
+    """
+    Returns GeoJSON polygons of Bhopal zones with designated flood risk categories.
+    """
+    return get_flood_risk_geojson()
 
 @router.post("/predict", response_model=FloodRiskResponse)
 async def predict(request: FloodRiskRequest):
     """
     Predict flood risk score and return categorization label based on rainfall,
-    elevation, and drainage parameters.
+    elevation, and drainage parameters using pure Python mathematical logic.
     """
     try:
-        model = get_model()
-        
-        # Prepare inputs as 2D numpy array
-        X = np.array([[
-            request.rainfall_24h,
-            request.rainfall_72h,
-            request.drain_capacity,
-            request.elevation,
-            request.soil_permeability,
-            request.drain_condition
-        ]])
-        
-        # Suppress sklearn UserWarning regarding feature names
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            risk_score = float(model.predict(X)[0])
-            
-        # Classify the predicted score
-        if risk_score <= 2.0:
-            risk_label = "Low"
-        elif risk_score <= 4.0:
-            risk_label = "Moderate"
-        elif risk_score <= 6.0:
-            risk_label = "High"
-        else:
-            risk_label = "Extreme"
-            
-        return FloodRiskResponse(risk_score=risk_score, risk_label=risk_label)
-        
+        result = predict_flood_risk(
+            rainfall_24h=request.rainfall_24h,
+            rainfall_72h=request.rainfall_72h,
+            drain_capacity=request.drain_capacity,
+            elevation=request.elevation,
+            soil_permeability=request.soil_permeability,
+            drain_condition=request.drain_condition
+        )
+        return FloodRiskResponse(
+            risk_score=result["risk_score"],
+            risk_label=result["risk_label"]
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
