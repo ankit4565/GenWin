@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from shared.heatmap_data import get_heatmap_geojson
+from auth_services.app.dependencies.auth import get_current_user
 
 router = APIRouter(
     prefix="/analytics",
@@ -14,17 +15,18 @@ async def get_status():
     }
 
 @router.get("/heatmap")
-async def get_heatmap_data():
+async def get_heatmap_data(current_user = Depends(get_current_user)):
     """
     Returns standard GeoJSON FeatureCollection of composite city heatmap indicators.
     """
     return get_heatmap_geojson()
 
 @router.get("/heatmap/{heatmap_type}")
-async def get_filtered_heatmap_data(heatmap_type: str):
+async def get_filtered_heatmap_data(heatmap_type: str, current_user = Depends(get_current_user)):
     """
     Returns standard GeoJSON FeatureCollection of filtered heatmap indicators by type.
     Allowed types: 'grievance', 'traffic', 'flooding', 'pollution'.
     """
     return get_heatmap_geojson(layer_type=heatmap_type)
+
 

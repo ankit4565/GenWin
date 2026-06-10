@@ -100,8 +100,7 @@ async def get_me(
 async def admin_only(
     current_user = Depends(
         require_roles([
-            Roles.SUPER_ADMIN,
-            Roles.CITY_ADMIN
+            Roles.ADMINISTRATOR
         ])
     )
 ):
@@ -121,7 +120,7 @@ async def change_role(
     db: AsyncSession = Depends(get_db),
 
     current_user = Depends(
-        require_roles([Roles.SUPER_ADMIN])
+        require_roles([Roles.ADMINISTRATOR])
     )
 
 ):

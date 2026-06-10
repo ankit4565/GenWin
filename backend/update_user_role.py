@@ -7,7 +7,7 @@ from auth_services.app.models.user import User
 async def main():
     if len(sys.argv) < 3:
         print("Usage: python update_user_role.py <email> <role>")
-        print("Roles: SUPER_ADMIN, CITY_ADMIN, OFFICER, CITIZEN")
+        print("Roles: ADMINISTRATOR, OFFICER, CITIZEN")
         return
 
     email = sys.argv[1]

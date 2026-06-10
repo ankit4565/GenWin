@@ -150,7 +150,7 @@ async def update_grievance_status(db: AsyncSession, grievance_id: UUID, status: 
         raise HTTPException(status_code=404, detail="Grievance not found")
 
     # Authorization check
-    is_admin = current_user.role in ["SUPER_ADMIN", "CITY_ADMIN"]
+    is_admin = current_user.role in ["ADMINISTRATOR"]
     is_assigned = grievance.assigned_to == current_user.id
     if not (is_admin or is_assigned):
         raise HTTPException(status_code=403, detail="Not authorized to update this grievance status")

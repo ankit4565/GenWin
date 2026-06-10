@@ -20,17 +20,22 @@ async def get_or_create_user(db, email, full_name, password, role):
         await db.refresh(user)
         print(f"Created user: {email} with role: {role} (ID: {user.id})")
     else:
-        # Update role if already exists
+        # Reset role and password hash as requested
         user.role = role
+        user.password_hash = hash_password(password)
         await db.commit()
-        print(f"Updated user: {email} to role: {role} (ID: {user.id})")
+        print(f"Updated user: {email} to role: {role} and reset password (ID: {user.id})")
     return user
 
 async def main():
     async with AsyncSessionLocal() as db:
-        await get_or_create_user(db, "citizen@example.com", "Test Citizen", "password123", "CITIZEN")
-        await get_or_create_user(db, "officer@example.com", "Test Officer", "password123", "OFFICER")
-        await get_or_create_user(db, "admin@example.com", "Test Admin", "password123", "SUPER_ADMIN")
+        # Create/reset the requested officers
+        await get_or_create_user(db, "ankit@example.com", "Ankit", "1234", "OFFICER")
+        await get_or_create_user(db, "amolika@example.com", "Amolika", "1234", "OFFICER")
+        await get_or_create_user(db, "vedanshi@example.com", "Vedanshi", "1234", "OFFICER")
+        
+        # Create/reset the requested administrator
+        await get_or_create_user(db, "ansh@example.com", "Ansh", "1234", "ADMINISTRATOR")
 
 if __name__ == "__main__":
     if sys.platform == 'win32':

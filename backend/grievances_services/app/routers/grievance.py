@@ -110,7 +110,7 @@ async def list_grievances(
     db_grievances = result.scalars().all()
 
     response_list = []
-    is_admin = current_user.role in [Roles.SUPER_ADMIN, Roles.CITY_ADMIN, Roles.OFFICER]
+    is_admin = current_user.role in [Roles.ADMINISTRATOR, Roles.OFFICER]
 
     for g in db_grievances:
         # Count supports
@@ -184,7 +184,7 @@ async def get_grievance_detail(
     is_supported_by_me = me_res.scalar() is not None
 
     # Check authorization for authority details
-    is_admin = current_user.role in [Roles.SUPER_ADMIN, Roles.CITY_ADMIN, Roles.OFFICER]
+    is_admin = current_user.role in [Roles.ADMINISTRATOR, Roles.OFFICER]
     assigned_val = g.assigned_to if is_admin else None
 
     return GrievanceResponse(
@@ -211,7 +211,7 @@ async def assign_authority(
     grievance_id: UUID,
     payload: GrievanceAssign,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_roles([Roles.SUPER_ADMIN, Roles.CITY_ADMIN]))
+    current_user: User = Depends(require_roles([Roles.ADMINISTRATOR]))
 ):
     """
     Endpoint for admins to assign a grievance to a respective authority/officer.
@@ -220,7 +220,7 @@ async def assign_authority(
     officer = await db.get(User, payload.assigned_to)
     if not officer:
         raise HTTPException(status_code=404, detail="Assigned officer/user not found")
-    if officer.role not in [Roles.SUPER_ADMIN, Roles.CITY_ADMIN, Roles.OFFICER]:
+    if officer.role not in [Roles.ADMINISTRATOR, Roles.OFFICER]:
         raise HTTPException(status_code=400, detail="Assigned user is not an officer or authority")
 
     g = await grievance_service.assign_grievance(
@@ -278,7 +278,7 @@ async def update_status(
     supports_count = cnt_res.scalar() or 0
 
     # Display assigned authority details based on role
-    is_admin = current_user.role in [Roles.SUPER_ADMIN, Roles.CITY_ADMIN, Roles.OFFICER]
+    is_admin = current_user.role in [Roles.ADMINISTRATOR, Roles.OFFICER]
     assigned_val = g.assigned_to if is_admin else None
 
     return GrievanceResponse(
