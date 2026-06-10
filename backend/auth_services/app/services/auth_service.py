@@ -250,7 +250,7 @@ async def update_user_role(
     db
 ):
     """
-    Updates the role of a user. (Only SUPER_ADMIN users have authority to access this logic).
+    Updates the role of a user. (Only ADMINISTRATOR users have authority to access this logic).
     """
     result = await db.execute(
         select(User).where(

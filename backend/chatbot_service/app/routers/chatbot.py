@@ -1,8 +1,9 @@
 import os
 import google.generativeai as genai
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from auth_services.app.dependencies.auth import get_current_user
 
 # Resolve and load .env file from the backend root directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +33,7 @@ async def get_status():
     }
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_gemini(payload: ChatRequest):
+async def chat_with_gemini(payload: ChatRequest, current_user = Depends(get_current_user)):
     """
     Interact with the Gemini AI model, configured with system instructions 
     relevant to Bhopal.

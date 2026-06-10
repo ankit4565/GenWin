@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from shared.flood_risk_data import predict_flood_risk, get_flood_risk_geojson
+from auth_services.app.dependencies.auth import get_current_user
 
 router = APIRouter(
     prefix="/flood",
@@ -31,14 +32,14 @@ async def get_status():
     }
 
 @router.get("/geojson")
-async def get_flood_zones():
+async def get_flood_zones(current_user = Depends(get_current_user)):
     """
     Returns GeoJSON polygons of Bhopal zones with designated flood risk categories.
     """
     return get_flood_risk_geojson()
 
 @router.post("/predict", response_model=FloodRiskResponse)
-async def predict(request: FloodRiskRequest):
+async def predict(request: FloodRiskRequest, current_user = Depends(get_current_user)):
     """
     Predict flood risk score and return categorization label based on rainfall,
     elevation, and drainage parameters using pure Python mathematical logic.
