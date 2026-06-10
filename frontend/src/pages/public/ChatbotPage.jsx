@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Navbar from '../../components/organisms/NavBar';
+import { sendMessageToBot } from '../../api/chatbotApi';
+
 
 export default function ChatbotPage() {
   const [messages, setMessages] = useState([
@@ -27,7 +29,13 @@ export default function ChatbotPage() {
   ]);
 
   const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [language, setLanguage] = useState('en');
+  const fileInputRef = useRef(null);
+  const [isListening, setIsListening] = useState(false);
   const [infoPanelOpen, setInfoPanelOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); 
+  const [selectedFile, setSelectedFile] = useState(null);
   const messageAreaRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -45,25 +53,206 @@ export default function ChatbotPage() {
     }
   };
 
-  const handleSend = () => {
-    if (inputValue.trim()) {
-      setMessages([
-        ...messages,
-        { id: messages.length + 1, type: 'user', content: inputValue },
+
+
+
+const handleSend = async () => {
+  if (!inputValue.trim()) return;
+
+  const userText = inputValue;
+
+  setMessages((prev) => [
+  ...prev,
+  {
+    id: Date.now(),
+    type: 'user',
+    content: userText,
+    file: selectedFile?.name || null,
+  },
+]);
+  
+
+  setInputValue('');
+  setSelectedFile(null);
+
+  // Start loading BEFORE API call
+  setIsLoading(true);
+
+  try {
+    const result = await sendMessageToBot(
+  language === 'hi'
+    ? `Please answer in Hindi: ${userText}`
+    : userText
+);
+
+    if (result.success) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: 'ai',
+          content: result.response,
+        },
       ]);
-      setInputValue('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
     }
+  } catch (error) {
+    console.error('Chatbot Error:', error);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now() + 1,
+        type: 'ai',
+        content:
+          'Sorry, I am unable to connect to the GenWin AI service right now.',
+      },
+    ]);
+  } finally {
+    setIsLoading(false);
+  }
+};
+const handleSuggestedQuestion = async (question) => {
+  // Add user message
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: Date.now(),
+      type: 'user',
+      content: question,
+    },
+  ]);
+
+  setIsLoading(true);
+
+  try {
+    const result = await sendMessageToBot(
+      language === 'hi'
+        ? `Please answer in Hindi: ${question}`
+        : question
+    );
+
+    if (result.success) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: 'ai',
+          content: result.response,
+        },
+      ]);
+    }
+  } catch (error) {
+    console.error('Chatbot Error:', error);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now() + 1,
+        type: 'ai',
+        content:
+          language === 'hi'
+            ? 'क्षमा करें, मैं इस समय GenWin AI सेवा से कनेक्ट नहीं कर पा रहा हूँ।'
+            : 'Sorry, I am unable to connect to the GenWin AI service right now.',
+      },
+    ]);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+const handleClearChat = () => {
+  setMessages([
+    {
+      id: 1,
+      type: 'ai',
+      content:
+        'Namaste! I am the Bhopal Smart City AI Assistant. I can help you with real-time city data, grievance tracking, and emergency information.\n\nHow can I assist you today?',
+      showButtons: true,
+    },
+  ]);
+};
+
+const handleExportLogs = () => {
+  const chatText = messages
+    .map(
+      (msg) =>
+        `${msg.type === 'user' ? 'User' : 'GenWin'}: ${msg.content}`
+    )
+    .join('\n\n');
+
+  const blob = new Blob([chatText], {
+    type: 'text/plain',
+  });
+
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `genwin-chat-${new Date()
+    .toISOString()
+    .slice(0, 10)}.txt`;
+
+  document.body.appendChild(a);
+  a.click();
+
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+};
+const handleLanguageToggle = () => {
+  setLanguage((prev) => (prev === 'en' ? 'hi' : 'en'));
+
+  setMessages((prev) => [
+    ...prev,
+    {
+      id: Date.now(),
+      type: 'ai',
+      content:
+        language === 'en'
+          ? 'भाषा हिन्दी में बदल दी गई है। अब मैं हिन्दी में उत्तर दूंगा।'
+          : 'Language switched to English. I will now respond in English.',
+    },
+  ]);
+};
+const handleVoiceInput = () => {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert('Speech Recognition is not supported in this browser');
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+
+  recognition.lang = language === 'hi' ? 'hi-IN' : 'en-US';
+  recognition.interimResults = false;
+
+  setIsListening(true);
+
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+
+    setInputValue(transcript);
+    setIsListening(false);
   };
 
-  const handleSuggestedQuestion = (question) => {
-    setMessages([
-      ...messages,
-      { id: messages.length + 1, type: 'user', content: question },
-    ]);
+  recognition.onerror = () => {
+    setIsListening(false);
   };
+
+  recognition.onend = () => {
+    setIsListening(false);
+  };
+};
+const handleFileUpload = (event) => {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  setSelectedFile(file);
+};
 
   return (
     <div className="flex flex-col h-screen font-['Hanken_Grotesk'] text-body-lg bg-[#191d18]">
@@ -106,13 +295,43 @@ export default function ChatbotPage() {
       <Navbar />    
 
       <main className="flex-1 flex overflow-hidden relative">
+        <button
+  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+  className="hidden lg:flex absolute left-2 top-4 z-50 bg-[#00450d] text-white p-2 rounded-lg shadow-lg hover:bg-[#006b14] transition-all"
+>
+     <span className="material-symbols-outlined">
+         {isSidebarOpen ? 'chevron_left' : 'chevron_right'}
+        </span>
+        </button>
         {/* Left Sidebar - City Status */}
-        <aside className="hidden lg:flex flex-col w-80 bg-[rgba(0,69,13,0.1)] backdrop-blur-[12px] border-r border-[rgba(145,215,138,0.2)] z-10 transition-all duration-300">
-          <div className="p-6 flex flex-col h-full">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-title-md text-title-md text-inverse-primary">City Status</h2>
-              <span className="material-symbols-outlined text-[#00450d]">monitoring</span>
-            </div>
+         <aside
+  className={`hidden lg:flex flex-col bg-[rgba(0,69,13,0.1)] backdrop-blur-[12px]
+  border-r border-[rgba(145,215,138,0.2)] z-10 overflow-hidden
+  transition-all duration-500 ease-in-out
+  ${isSidebarOpen ? 'w-80' : 'w-16'}`}
+>
+     <div
+  className={`p-6 flex flex-col h-full  ${
+    isSidebarOpen
+      ? 'opacity-100'
+      : 'opacity-0 pointer-events-none'
+  }`}
+>
+            <div className="flex items-center justify-between mb-6 -mt-2">
+  <div className="flex items-center gap-3 ml-8">
+    {isSidebarOpen && (
+      <h2 className="font-title-md text-title-md text-surface-variant">
+        City Status
+      </h2>
+    )}
+  </div>
+
+  {isSidebarOpen && (
+    <span className="material-symbols-outlined text-[#00450d]">
+      monitoring
+    </span>
+  )}
+</div>
             <div className="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2">
               {/* Water Supply Widget */}
               <div className="p-3 bg-surface-container-highest/10 rounded-xl border border-outline-variant/10">
@@ -156,10 +375,16 @@ export default function ChatbotPage() {
               </div>
             </div>
 
-            <button className="w-full flex items-center justify-center gap-3 bg-surface-container-highest/20 hover:bg-surface-container-highest/40 py-3 rounded-xl border border-outline-variant/20 transition-all font-label-data text-label-data text-[#00450d] mt-auto text-xs uppercase tracking-wide">
-              <span className="material-symbols-outlined">translate</span>
-              Switch to Hindi (हिन्दी)
-            </button>
+            <button
+  onClick={handleLanguageToggle}
+  className="w-full flex items-center justify-center gap-3 bg-surface-container-highest/20 hover:bg-surface-container-highest/40 py-3 rounded-xl border border-outline-variant/20 transition-all font-label-data text-label-data text-[#00450d] mt-auto text-xs uppercase tracking-wide text-surface-variant"
+>
+  <span className="material-symbols-outlined">translate</span>
+
+  {language === 'en'
+    ? 'Switch to Hindi (हिन्दी)'
+    : 'Switch to English'}
+</button>
           </div>
         </aside>
 
@@ -216,7 +441,15 @@ export default function ChatbotPage() {
                     }`}
                   >
                     <p className="font-body-lg text-body-lg text-white leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    {message.file && (
+  <div className="mt-2 flex items-center gap-2 text-sm text-[#91d78a]">
+    <span className="material-symbols-outlined text-sm">
+      attach_file
+    </span>
 
+    <span>{message.file}</span>
+  </div>
+)}
                     {/* Alert if present */}
                     {message.showAlert && (
                       <div className="p-3 bg-error/10 border border-error/30 rounded-lg mt-3 flex items-start gap-3">
@@ -253,6 +486,27 @@ export default function ChatbotPage() {
                 </div>
               </div>
             ))}
+   {isLoading && (
+  <div className="flex justify-start">
+    <div className="bg-[rgba(0,69,13,0.4)] p-4 rounded-xl text-white">
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-green-400 animate-bounce"></div>
+        <div
+          className="w-2 h-2 rounded-full bg-green-400 animate-bounce"
+          style={{ animationDelay: '0.15s' }}
+        ></div>
+        <div
+          className="w-2 h-2 rounded-full bg-green-400 animate-bounce"
+          style={{ animationDelay: '0.3s' }}
+        ></div>
+      </div>
+
+      <p className="mt-2 text-sm text-green-200">
+        GenWin is thinking...
+      </p>
+    </div>
+  </div>
+)}
           </div>
 
           {/* Input Area */}
@@ -291,46 +545,99 @@ export default function ChatbotPage() {
 
             {/* Input Field */}
             <div className="relative group">
-              <textarea
-                ref={textareaRef}
-                value={inputValue}
-                onChange={handleInputChange}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                className="w-full bg-surface-container-highest/20 border border-outline-variant/30 rounded-2xl py-4 pl-6 pr-32 focus:ring-2 focus:ring-[#00450d]/50 focus:border-[#00450d] transition-all resize-none text-body-lg text-white placeholder:text-white/60"
-                placeholder="Ask me about Bhopal traffic, water, or utilities..."
-                rows="1"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <button className="material-symbols-outlined p-2 text-surface-variant hover:text-[#00450d] transition-colors">
-                  mic
-                </button>
-                <button className="material-symbols-outlined p-2 text-surface-variant hover:text-[#00450d] transition-colors">
-                  attach_file
-                </button>
-                <button
-                  onClick={handleSend}
-                  className="bg-[#00450d] hover:bg-[#91d78a] text-white w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-lg active:scale-95 group-focus-within:bg-[#91d78a]"
-                >
-                  <span className="material-symbols-outlined">send</span>
-                </button>
-              </div>
-            </div>
+              {selectedFile && (
+  <div className="mb-3 flex items-center justify-between bg-[rgba(0,69,13,0.2)] border border-[#91d78a]/30 rounded-lg p-3">
+    <div className="flex items-center gap-2">
+      <span className="material-symbols-outlined">
+        description
+      </span>
+
+      <span className="text-sm">
+        {selectedFile.name}
+      </span>
+    </div>
+
+    <button
+      onClick={() => setSelectedFile(null)}
+      className="material-symbols-outlined text-red-500"
+    >
+      close
+    </button>
+  </div>
+)}
+  <textarea
+    ref={textareaRef}
+    value={inputValue}
+    onChange={handleInputChange}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    }}
+    className="w-full bg-surface-container-highest/20 border border-outline-variant/30 rounded-2xl py-4 pl-6 pr-32 focus:ring-2 focus:ring-[#00450d]/50 focus:border-[#00450d] transition-all resize-none text-body-lg text-white placeholder:text-white/60"
+    placeholder="Ask me about Bhopal traffic, water, or utilities..."
+    rows="1"
+  />
+
+  {/* Hidden File Input */}
+  <input
+    type="file"
+    ref={fileInputRef}
+    className="hidden"
+    onChange={handleFileUpload}
+  />
+
+  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+    {/* Voice Button */}
+    <button
+      onClick={handleVoiceInput}
+      className={`material-symbols-outlined p-2 transition-colors ${
+        isListening
+          ? 'text-red-500 animate-pulse'
+          : 'text-surface-variant hover:text-[#00450d]'
+      }`}
+    >
+      mic
+    </button>
+
+    {/* File Upload Button */}
+    <button
+      onClick={() => fileInputRef.current?.click()}
+      className="material-symbols-outlined p-2 text-surface-variant hover:text-[#00450d] transition-colors"
+    >
+      attach_file
+    </button>
+
+    {/* Send Button */}
+    <button
+      onClick={handleSend}
+      disabled={isLoading}
+      className="bg-[#00450d] hover:bg-[#91d78a] text-white w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <span className="material-symbols-outlined">
+        {isLoading ? 'hourglass_top' : 'send'}
+      </span>
+    </button>
+  </div>
+</div>
 
             {/* Footer */}
             <div className="mt-3 flex justify-between items-center px-2">
               <p className="text-xs font-label-data text-white/60 tracking-wider">VERSION 2.4.0-RAG | POWERED BY BHOPAL SMART CITY TWIN</p>
               <div className="flex gap-4">
-                <button className="text-xs font-label-data text-surface-variant/60 hover:text-[#00450d] transition-colors">
-                  Clear Chat
-                </button>
-                <button className="text-xs font-label-data text-surface-variant/60 hover:text-[#00450d] transition-colors">
-                  Export Logs
-                </button>
+                <button
+             onClick={handleClearChat}
+           className="text-xs font-label-data text-surface-variant/60 hover:text-[#00450d] transition-colors"
+            >
+         Clear Chat
+           </button>
+              <button
+       onClick={handleExportLogs}
+       className="text-xs font-label-data text-surface-variant/60 hover:text-[#00450d] transition-colors"
+      >
+       Export Logs
+         </button>
               </div>
             </div>
           </div>
@@ -402,7 +709,7 @@ export default function ChatbotPage() {
 
       {/* Footer */}
       <footer className="bg-surface-container-highest/5 border-t border-outline-variant/10 text-surface-variant/40 py-2 px-16 text-center text-xs font-label-data z-20">
-        © 2024 BHOPAL SMART CITY DEVELOPMENT CORPORATION LTD. | AI CITIZEN PORTAL v6.2
+        © 2026 BHOPAL SMART CITY DEVELOPMENT CORPORATION LTD. | AI CITIZEN PORTAL v6.2
       </footer>
     </div>
   );

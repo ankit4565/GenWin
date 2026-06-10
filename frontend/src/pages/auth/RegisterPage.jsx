@@ -5,6 +5,7 @@ import { Eye, EyeOff, Mail, Lock, ArrowRight, Globe, User, Phone, MapPin, AlertC
 import defaultVideoUrl from '../../assets/VIDEO-2026-05-28-15-17-14.mp4'
 import { register, saveAuthTokens } from '../../api/authApi'
 
+
 /* ─── Google icon SVG ─── */
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -157,10 +158,10 @@ function RegisterForm({ onSubmit }) {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
-    phone: '',
+    phone: '' | null,
     password: '',
     confirm_password: '',
-    address: '',
+    address: '' | null,
     agree_terms: false,
   });
   const [showPw, setShowPw] = useState(false);
@@ -232,7 +233,7 @@ function RegisterForm({ onSubmit }) {
       onSubmit?.(response, formData);
 
       setTimeout(() => {
-        navigate('/');
+        navigate('/login');
       }, 500);
     } catch (err) {
       setStatus('error');

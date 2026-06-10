@@ -1,35 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell, BarChart3, AlertTriangle, AlertCircle, CheckCircle, Cloud } from 'lucide-react';
+import { Search, Bell, BarChart3, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react';
 import Navbar from "../../components/organisms/NavBar"
 import TrafficMap from "../../components/organisms/TrafficMap";
-import { getWeather } from "../../services/weatherService";
+import  Weather  from "../../components/organisms/Weather";
 console.log(import.meta.env.VITE_OPENWEATHER_KEY);
 
 export default function TrafficPage() {
   const [congestionIndex, setCongestionIndex] = useState(42);
   const [lastSync, setLastSync] = useState('14:32:01');
-  const [isLiveUpdating, setIsLiveUpdating] = useState(true);
-  const [weather, setWeather] = useState(null);
 
- useEffect(() => {
-  const fetchWeather = async () => {
-    try {
-      const data = await getWeather();
-      setWeather(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  fetchWeather();
-
-  const interval = setInterval(() => {
-    setLastSync(new Date().toLocaleTimeString());
-     fetchWeather();
-  }, 300000);
-
-  return () => clearInterval(interval);
-}, []);
 
   const zones = [
     {
@@ -97,33 +76,21 @@ export default function TrafficPage() {
                 Live Updating (30s)
               </div>
 
-              {/* Weather/Condition Widget */}
               <div className="absolute top-6 right-6 z-10 flex flex-col gap-3">
-                <div className="bg-white/90 backdrop-blur p-3 rounded-lg flex items-center gap-3 shadow-md">
-                  <Cloud className="w-6 h-6 text-green-700" />
-                  <div className="text-xs">
-                     <div className="bg-white/90 backdrop-blur p-3 rounded-lg flex items-center gap-3 shadow-md">
-  <Cloud className="w-6 h-6 text-green-700" />
+          <Weather />
 
-  {weather ? (
-    <div className="text-xs">
-      <span>
-      {weather?.current?.temperature_2m || "--"}°C</span>
-    </div>
-  ) : (
-    <span>Loading...</span>
-  )}
-</div>
-                  </div>
-                </div>
+           <button className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-xl flex items-center gap-2 hover:bg-green-800">
+              <BarChart3 className="w-4 h-4" />
+          Open Traffic Dashboard
+         </button>
+          </div>
 
-                {/* Officer CTA */}
-                <button className="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-xl flex items-center gap-2 hover:bg-green-800 transition-all hover:translate-y-[-2px]">
-                  <BarChart3 className="w-4 h-4" />
-                  Open Traffic Dashboard
-                </button>
-              </div>
-            </div>
+
+
+
+         
+          </div>
+
           </div>
 
           {/* BEGIN: Data Sidebar (Right) */}

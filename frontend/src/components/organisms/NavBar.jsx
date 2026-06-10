@@ -1,6 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Bell, Globe, Search } from 'lucide-react'
+import { Bell, Globe, Search,CircleUserRound } from 'lucide-react'
 
+const isLoggedIn =
+	localStorage.getItem('genwin_access_token') ||
+	sessionStorage.getItem('genwin_access_token')
 
 
 
@@ -43,6 +46,12 @@ export default function NavBar() {
 					>
 						Alerts
 					</Link>
+					<Link
+						to="/drainage"
+						className={`py-1 text-[12px] font-semibold uppercase tracking-[0.05em] transition-colors hover:text-[#00450d] ${isActive('/drainage') ? 'border-b-2 border-[#00450d] text-[#00450d]' : 'text-[#41493e]'}`}
+					>
+						Drainage
+					</Link>
 				</nav>
 
 				<div className="flex items-center gap-4">
@@ -61,9 +70,47 @@ export default function NavBar() {
 						<Bell size={16} />
 					</button>
 
-					<Link to="/login" className="rounded-full bg-[#00450d] px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-white transition-transform hover:scale-95">
-						Login
-					</Link>
+					{isLoggedIn ? (
+	<>
+		{/* <Link
+  to="/profile"
+  className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#00450d] hover:scale-105 transition-all"
+>
+  <img
+   // src={user?.profileImage || "/default-avatar.png"}
+   src="luicide-profile-placeholder.png"
+    alt="Profile"
+    className="w-full h-full object-cover"
+  />
+</Link> */}
+<Link
+  to="/profile"
+  className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-[#00450d] hover:bg-[#00450d]/10 transition-all"
+>
+  <CircleUserRound size={24} className="text-[#00450d]" />
+</Link>
+
+		<button
+			onClick={() => {
+				localStorage.removeItem('genwin_access_token')
+				localStorage.removeItem('genwin_refresh_token')
+				sessionStorage.removeItem('genwin_access_token')
+				sessionStorage.removeItem('genwin_refresh_token')
+				window.location.href = '/login'
+			}}
+			className="rounded-full bg-red-600 px-5 py-2 text-[12px] font-semibold uppercase text-white"
+		>
+			Logout
+		</button>
+	</>
+) : (
+	<Link
+		to="/login"
+		className="rounded-full bg-[#00450d] px-6 py-2.5 text-[12px] font-semibold uppercase tracking-[0.05em] text-white transition-transform hover:scale-95"
+	>
+		Login
+	</Link>
+)}
 				</div>
 			</div>
 		</header>

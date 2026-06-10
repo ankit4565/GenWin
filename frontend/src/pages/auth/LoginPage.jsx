@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Globe} from 'lucide-react';
 import defaultVideoUrl from '../../assets/VIDEO-2026-05-28-15-17-14.mp4'
 import { login, saveAuthTokens } from '../../api/authApi'
+import Weather from '../../components/organisms/Weather';
 /* ─── Google icon SVG ─── */
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -122,23 +123,27 @@ function LoginForm({ onSubmit }) {
     setError('');
 
     try {
-      const response = await login({ email, password });
+     const response = await login({ email, password });
 
-      if (!response?.success) {
-        throw new Error(response?.message || 'Login failed');
-      }
+console.log("LOGIN RESPONSE:", response);
 
-      saveAuthTokens({
-        access_token: response.access_token,
-        refresh_token: response.refresh_token,
-        remember,
-      });
+saveAuthTokens({
+  access_token: response.access_token,
+  refresh_token: response.refresh_token,
+  remember,
+});
+
+console.log(
+  "AFTER SAVE:",
+  localStorage.getItem('genwin_access_token'),
+  sessionStorage.getItem('genwin_access_token')
+);
 
       setStatus('success');
       onSubmit?.(response, { email, remember });
 
       setTimeout(() => {
-        navigate('/');
+        navigate('/grievances');
       }, 500);
     } catch (err) {
       setStatus('error');
@@ -410,6 +415,7 @@ export default function LoginPage({ videoUrl, onSubmit }) {
           zIndex: 10,
           animation: 'fadeSlideDown 0.5s both',
         }}>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <rect x="3" y="3" width="7" height="7" rx="1" stroke="rgba(172,244,164,0.85)" strokeWidth="1.5"/>
@@ -432,9 +438,8 @@ export default function LoginPage({ videoUrl, onSubmit }) {
           }}>
             <Globe size={14} />
             EN / HI
-          </button>
+          </button>   
         </nav>
-
         {/* Card */}
         <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: 440 }}>
           <LoginForm onSubmit={onSubmit} />
