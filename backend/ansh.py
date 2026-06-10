@@ -21,6 +21,7 @@ from simulation_service.app.routers.simulation import router as simulation_route
 from traffic_service.app.routers.traffic import router as traffic_router
 from web_service.app.routers.web import router as web_router
 from grievances_services.app.routers.grievance import router as grievances_router
+from flood_service.app.routers.flood import router as flood_router
 
 # Initialize the unified application server
 server = FastAPI(
@@ -51,6 +52,7 @@ server.include_router(simulation_router)
 server.include_router(traffic_router)
 server.include_router(web_router)
 server.include_router(grievances_router)
+server.include_router(flood_router)
 
 @server.get("/")
 async def root():
@@ -68,7 +70,8 @@ async def root():
             "simulation_service",
             "traffic_service",
             "web_service",
-            "grievances_service"
+            "grievances_service",
+            "flood_service"
         ]
     }
 
